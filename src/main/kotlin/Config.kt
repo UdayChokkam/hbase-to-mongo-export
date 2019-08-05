@@ -40,12 +40,14 @@ object Config {
                     url
             )
         }
+    }
+
+    object Encryption {
+        var sourceCipherAlgorithm = getEnv("ENC_SOURCE_CIPHER_ALGO") ?: "AES/CTR/NoPadding"
+        var targetCipherAlgorithm = getEnv("ENC_TARGET_CIPHER_ALGO") ?: "AES/CTR/NoPadding"
 
         fun createEncryptionHandler(): EncryptorDecryptor {
-            if (fake) {
-                return PhoneyCipherService()
-            }
-            return AESCipherService(SecureRandom())
+            return AESCipherService(SecureRandom(), sourceCipherAlgorithm, targetCipherAlgorithm)
         }
     }
 

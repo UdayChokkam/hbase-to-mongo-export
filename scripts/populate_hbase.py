@@ -18,6 +18,7 @@ from Crypto import Random
 from Crypto.Cipher import AES
 from Crypto.Util import Counter
 
+
 def main():
     args = command_line_args()
     connected = False
@@ -29,10 +30,20 @@ def main():
             connection.open()
 
             if not args.skip_table_creation:
-                connection.create_table(args.destination_table,
-                                        {'cf': dict(max_versions=10)})
+                try:
+                    connection.create_table("ucdata",
+                                            {'cf': {"max_versions": 10}})
+                except thriftpy2:
+                    pass
 
-            table = connection.table(args.destination_table)
+                try:
+                    connection.create_table("ucdata-topics",
+                                            {'cf': {}})
+                except:
+                    pass
+
+            table = connection.table("ucdata")
+            topic_table = connection.table("ucdata-topics")
             connected = True
 
             if args.data_key_service:
@@ -49,8 +60,8 @@ def main():
                 data = json.load(file)
                 for datum in data:
                     record_id = datum['id']
-                    timestamp = datum['cf:data']['timestamp']
-                    value = datum['cf:data']['value']
+                    timestamp = datum['data']['timestamp']
+                    value = datum['data']['value']
                     if 'dbObject' in value:
                         db_object = value['dbObject']
                         if db_object != "CORRUPT":
@@ -74,8 +85,9 @@ def main():
                         else:
                             value['encryption']['initialisationVector'] = "PHONEYVECTOR"
 
-                        obj = {'cf:data': json.dumps(value)}
+                        obj = {'cf:' + args.topic: json.dumps(value)}
                         table.put(record_id, obj, timestamp=int(timestamp))
+                        topic_table.counter_inc(args.topic, "cf:msg", 1)
 
                 if args.dump_table_contents:
                     for key, data in table.scan():
@@ -101,6 +113,7 @@ def encrypt(key, plaintext):
     ciphertext = aes.encrypt(plaintext.encode("utf8"))
     return (base64.b64encode(initialisation_vector),
             base64.b64encode(ciphertext))
+
 
 def uc_object():
     return {
@@ -131,7 +144,7 @@ def uc_object():
             "knownDate": 20150320
         },
         "createdDateTime": {
-            "$date":"2015-03-20T12:23:25.183Z"
+            "$date": "2015-03-20T12:23:25.183Z"
         },
         "_version": 2,
         "_lastModifiedDateTime": {
@@ -143,6 +156,7 @@ def uc_object():
 def guid():
     return str(uuid.uuid4())
 
+
 def uniq_db_object():
     record = uc_object()
     record['_id']['declarationId'] = guid()
@@ -151,6 +165,7 @@ def uniq_db_object():
     record['townCity']['cryptoId'] = guid()
     record['processId'] = guid()
     return record
+
 
 def command_line_args():
     parser = argparse.ArgumentParser(description='Pre-populate hbase.')
@@ -164,13 +179,14 @@ def command_line_args():
                         help='Prepare the output file.')
     parser.add_argument('-s', '--skip-table-creation', action='store_true',
                         help='Do not create the target table.')
-    parser.add_argument('-t', '--destination-table', default='ucdata',
-                        help='The table to write the records to.')
+    parser.add_argument('-t', '--topic', default='db.test.topic',
+                        help='The topic that the records should have come from.')
     parser.add_argument('-z', '--zookeeper-quorum', default='hbase',
                         help='The zookeeper quorum host.')
     parser.add_argument('sample_data_file',
                         help='File containing the sample data.')
     return parser.parse_args()
+
 
 def init(args):
     if args.completed_flag and os.path.isdir(args.completed_flag):

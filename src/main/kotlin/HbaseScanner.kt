@@ -23,6 +23,8 @@ data class SourceRecord(
 
 fun Result.asSourceRecord(family: ByteArray, topic: ByteArray): SourceRecord {
     val value = getValue(family, topic)
+    advance()
+
     val dataBlock = Gson().fromJson(String(value), JsonObject::class.java)
     val encryptionInfo = dataBlock.getAsJsonObject("encryption")
 
@@ -40,22 +42,38 @@ fun Result.asSourceRecord(family: ByteArray, topic: ByteArray): SourceRecord {
 
 fun scanTopicTable(connection: Connection, tableName: ByteArray, family: ByteArray, topic: ByteArray) = sequence {
     val logger: Logger = LoggerFactory.getLogger("scanTopicTable")
-    logger.info("Getting '$topic' from '$tableName' on '$connection'.")
+    logger.info("Getting '${String(topic)}' from '${String(tableName)}' on '$connection'.")
     val table = connection.getTable(TableName.valueOf(tableName))
-    val scan = Scan()
+    val scan = Scan().apply {
+        addColumn(family, topic)
+    }
     val scanner = table.getScanner(scan)
 
     try {
-        yieldAll(scanner.map { it.asSourceRecord(family, topic) })
+        while(true) {
+            val result = scanner.next()
+            if (result == null) {
+                logger.info("ALL DONE")
+                break
+            }
+
+            logger.info(String(result.row))
+            yield(result.asSourceRecord(family, topic))
+        }
     } finally {
         scanner.close()
         table.close()
     }
-}
+}.constrainOnce()
 
 fun activeTopics(connection: Connection, tableName: ByteArray, family: ByteArray, qualifier: ByteArray) = sequence {
+    val logger: Logger = LoggerFactory.getLogger("scanTopicTable")
     connection.getTable(TableName.valueOf(tableName)).use { table ->
         val scanner = table.getScanner(family, qualifier)
-        yieldAll(scanner.map { it.row })
+        val rows = scanner.map { logger.info(String(it.row)); it.row }
+
+        for (row in rows) {
+            yield(row)
+        }
     }
 }

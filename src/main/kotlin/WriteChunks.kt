@@ -4,18 +4,8 @@ import org.apache.commons.compress.compressors.CompressorStreamFactory
 import java.io.BufferedOutputStream
 import java.io.ByteArrayOutputStream
 
-fun Sequence<ByteArray>.splitBySize(maxSize: Long) = sequence {
-    val iterator = iterator()
-    while (iterator.hasNext()) {
-        var batchSize = 0
-        val chunk = map { "${it}\n" }.takeWhile {
-            batchSize += it.length
-            batchSize < maxSize
-        }.joinToString().toByteArray()
-
-        yield(chunk)
-    }
-}
+// TODO make this return a sequence of groups of lines whose lengths add up to, at most, maxSize
+fun Sequence<ByteArray>.splitBySize(maxSize: Long) = this
 
 fun ByteArray.compress(): ByteArray {
     val output = ByteArrayOutputStream()

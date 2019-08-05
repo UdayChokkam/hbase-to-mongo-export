@@ -11,7 +11,7 @@ import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
-class AESCipherService(val secureRandom: SecureRandom): EncryptorDecryptor {
+class AESCipherService(val secureRandom: SecureRandom, val sourceCipherAlgorithm: String, val targetCipherAlgorithm: String) : EncryptorDecryptor {
 
     init {
         Security.addProvider(BouncyCastleProvider())
@@ -42,10 +42,6 @@ class AESCipherService(val secureRandom: SecureRandom): EncryptorDecryptor {
         val original = cipher.doFinal(decodedBytes)
         return String(original)
     }
-
-    private lateinit var sourceCipherAlgorithm: String
-
-    private lateinit var targetCipherAlgorithm: String
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(AESCipherService::class.toString())
