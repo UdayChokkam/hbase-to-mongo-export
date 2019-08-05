@@ -1,13 +1,8 @@
-package app.services.impl
+package crypto
 
-import app.domain.EncryptionResult
-import app.services.CipherService
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.Profile
-import org.springframework.stereotype.Service
 import java.security.Key
 import java.security.SecureRandom
 import java.security.Security
@@ -16,9 +11,7 @@ import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
-@Service
-@Profile("aesCipherService")
-class AESCipherService(private val secureRandom: SecureRandom): CipherService {
+class AESCipherService(val secureRandom: SecureRandom): EncryptorDecryptor {
 
     init {
         Security.addProvider(BouncyCastleProvider())
@@ -35,8 +28,7 @@ class AESCipherService(private val secureRandom: SecureRandom): CipherService {
         }
 
         val encrypted = cipher.doFinal(unencrypted)
-        return EncryptionResult(String(Base64.getEncoder().encode(initialisationVector)),
-                String(Base64.getEncoder().encode(encrypted)))
+        return EncryptionResult(initialisationVector, encrypted)
     }
 
     override fun decrypt(key: String, initializationVector: String, encrypted: String): String {
@@ -51,11 +43,8 @@ class AESCipherService(private val secureRandom: SecureRandom): CipherService {
         return String(original)
     }
 
-    @Value("\${source.cipher.algorithm:AES/CTR/NoPadding}")
     private lateinit var sourceCipherAlgorithm: String
 
-
-    @Value("\${target.cipher.algorithm:AES/CTR/NoPadding}")
     private lateinit var targetCipherAlgorithm: String
 
     companion object {

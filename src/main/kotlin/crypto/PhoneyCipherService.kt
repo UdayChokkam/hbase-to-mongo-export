@@ -1,13 +1,6 @@
-package app.services.impl
+package crypto
 
-import app.domain.EncryptionResult
-import app.services.CipherService
-import org.springframework.context.annotation.Profile
-import org.springframework.stereotype.Service
-
-@Service
-@Profile("phoneyCipherService")
-class PhoneyCipherService: CipherService {
+class PhoneyCipherService: EncryptorDecryptor {
 
     override fun encrypt(key: String, unencrypted: ByteArray): EncryptionResult {
         TODO("not implemented")

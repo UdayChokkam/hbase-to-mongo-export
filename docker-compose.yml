@@ -31,11 +31,10 @@ services:
       - hbase
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
-    command: >-
-      --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToFile,batchRun,strongRng
-      --source.table.name=ucdata
-      --data.ready.flag.location=data/ready
-      --file.output=data/output.txt
+    environment:
+      HBASE_ZOOKEEPER_QUORUM: hbase
+      DKS_FAKE: "true"
+      FILE_DIRECTORY: data
 
   hbase-to-mongo-export-itest:
     image: hbase-to-mongo-export-itest

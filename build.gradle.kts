@@ -1,14 +1,13 @@
 import net.researchgate.release.GitAdapter
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import org.springframework.boot.gradle.tasks.run.BootRun
 
 plugins {
     id("org.springframework.boot") version "2.1.6.RELEASE"
     id("io.spring.dependency-management") version "1.0.7.RELEASE"
     kotlin("jvm") version "1.3.40"
     kotlin("plugin.spring") version "1.3.40"
-    id ("net.researchgate.release") version "2.6.0"
+    id("net.researchgate.release") version "2.6.0"
     application
     groovy
 }
@@ -26,15 +25,13 @@ tasks.bootJar {
 
 
 release {
-   failOnPublishNeeded = false
-    with (propertyMissing("git") as GitAdapter.GitConfig) {
+    failOnPublishNeeded = false
+    with(propertyMissing("git") as GitAdapter.GitConfig) {
         requireBranch = ""
     }
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter")
-    implementation("org.springframework.boot:spring-boot-starter-batch")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.apache.hbase:hbase-client:2.2.0")
@@ -46,8 +43,7 @@ dependencies {
     implementation("junit:junit:4.12")
     implementation("org.apache.httpcomponents:fluent-hc:4.5.6")
     implementation("org.apache.httpcomponents:httpclient:4.5.6")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.springframework.batch:spring-batch-test")
+    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.2.2")
 }
 
 tasks.withType<KotlinCompile> {
@@ -58,12 +54,7 @@ tasks.withType<KotlinCompile> {
 }
 
 application {
-    mainClassName = "app.HBaseToMongoExportKt"
-}
-
-tasks.getByName<BootRun>("bootRun") {
-    main = "app.HBaseCrownExportKt"
-    systemProperties = properties
+    mainClassName = "HBaseToMongoExportKt"
 }
 
 sourceSets {

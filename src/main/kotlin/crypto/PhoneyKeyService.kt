@@ -1,15 +1,9 @@
-package app.services.impl
+package crypto
 
-import app.domain.DataKeyResult
-import app.services.KeyService
-import org.springframework.context.annotation.Profile
-import org.springframework.stereotype.Service
 
-@Service
-@Profile("phoneyDataKeyService")
-class PhoneyKeyService: KeyService {
+class PhoneyKeyService: DataKeyHandler {
 
-    override fun batchDataKey() = dataKey
+    override fun createDataKey() = dataKey
 
     private val dataKey =
             DataKeyResult("38db138e-5b56-4557-9295-6d4fcbf97efe",
